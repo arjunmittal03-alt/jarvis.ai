@@ -223,4 +223,29 @@ function voiceInput(){
   };
   recognition.start();
 }
+const API_KEY = "PASTE_YOUR_KEY_HERE";
 
+async function askJarvis(message) {
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + API_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "deepseek/deepseek-chat:free",
+      messages: [
+        { role: "system", content: "You are Jarvis, a smart AI that explains clearly for students." },
+        { role: "user", content: message }
+      ]
+    })
+  });
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
+document.getElementById("sendBtn").onclick = async () => {
+  const input = document.getElementById("userInput").value;
+  const reply = await askJarvis(input);
+  document.getElementById("chatBox").innerText = reply;
+};
