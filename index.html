@@ -124,3 +124,103 @@ function imageGen(){
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login - Jarvis</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="login-box">
+  <h2>Login to Jarvis</h2>
+  <input type="text" id="username" placeholder="Enter name">
+  <button onclick
+    ="login()">Login</button>
+</div>
+
+<script>
+function login(){
+  const allowed = ["Daddy", "Mom", "Brother"];
+  const name = document.getElementById("username").value;
+  if(allowed.includes(name)){
+    localStorage.setItem("user", name);
+    window.location.href = "index.html";
+  } else {
+    alert("Access Denied");
+  }
+}
+</script>
+</body>
+</html>
+body {
+  background-color: #0b0c1a;
+  color: #00ffff;
+  font-family: 'Orbitron', sans-serif;
+  text-align: center;
+}
+
+input, button {
+  background: #111;
+  color: #00ffff;
+  border: 1px solid #00ffff;
+  padding: 10px;
+  margin: 5px;
+}
+
+button:hover {
+  background: #00ffff;
+  color: #0b0c1a;
+  cursor: pointer;
+}
+// Send user query and get AI response
+async function sendMessage(){
+  let input = document.getElementById("msg").value;
+  if(!input) return;
+  addChat("You: " + input);
+
+  // Free AI endpoint (or your OpenAI API)
+  let res = await fetch("https://api.openai.com/v1/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer YOUR_API_KEY"
+    },
+    body: JSON.stringify({
+      model: "text-davinci-003",
+      prompt: input,
+      max_tokens: 300
+    })
+  });
+
+  let data = await res.json();
+  let reply = data.choices[0].text;
+  addChat("Jarvis: " + reply);
+  speak(reply);
+  document.getElementById("msg").value = "";
+}
+
+function addChat(text){
+  const chatBox = document.getElementById("chat");
+  chatBox.innerHTML += `<p>${text}</p>`;
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Voice in Hindi & English
+function speak(text){
+  let utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "hi-IN";  // Change to "en-US" for English
+  speechSynthesis.speak(utter);
+}
+
+// Mic input
+function voiceInput(){
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang = "hi-IN";
+  recognition.onresult = e => {
+    document.getElementById("msg").value = e.results[0][0].transcript;
+    sendMessage();
+  };
+  recognition.start();
+}
+
