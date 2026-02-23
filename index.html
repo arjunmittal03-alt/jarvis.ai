@@ -1,202 +1,34 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Jarvis AI</title>
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-
-<style>
-body{
-  margin:0;
-  background: radial-gradient(circle,#0a0f1f,#000);
-  color:#00eaff;
-  font-family:Arial;
-  text-align:center;
-}
-h1{letter-spacing:3px;margin-top:20px;}
-#box{width:90%;max-width:500px;margin:auto;}
-input,button{
-  padding:10px;margin:5px;border-radius:8px;border:none;
-}
-button{background:#00eaff;font-weight:bold;}
-#chat{
-  height:250px;overflow:auto;
-  border:1px solid #00eaff33;
-  padding:10px;border-radius:10px;
-}
-img{max-width:100%;border-radius:10px;margin-top:10px;}
-</style>
-</head>
-
-<body>
-
-<h1>JARVIS</h1>
-
-<div id="box">
-
-<div id="login">
-<input id="name" placeholder="Enter your name">
-<button onclick="login()">Enter</button>
-</div>
-
-<div id="app" style="display:none;">
-<div id="chat"></div>
-
-<input id="msg" placeholder="Ask Jarvis...">
-<br>
-<button onclick="send()">Send</button>
-<button onclick="voice()">🎤</button>
-<button onclick="imageGen()">🎨</button>
-</div>
-
-</div>
-
 <script>
-
-// LOGIN
-function login(){
- let n=document.getElementById("name").value;
- if(n){
-  localStorage.setItem("user",n);
-  showApp();
- }
-}
-function showApp(){
- document.getElementById("login").style.display="none";
- document.getElementById("app").style.display="block";
-}
-if(localStorage.getItem("user")) showApp();
-
-// CHAT
-function add(t){
- let c=document.getElementById("chat");
- c.innerHTML+="<p>"+t+"</p>";
- c.scrollTop=c.scrollHeight;
-}
-
-function send(){
- let m=document.getElementById("msg").value;
- if(!m)return;
- add("You: "+m);
- let r=brain(m.toLowerCase());
- add("Jarvis: "+r);
- speak(r);
- document.getElementById("msg").value="";
-}
-
-// AI BRAIN
-function brain(q){
- if(q.includes("hello")) return "नमस्ते। मैं आपका जार्विस हूँ।";
- if(q.includes("study")) return "ध्यान से पढ़ाई करो। सफलता मिलेगी।";
- if(q.includes("who made you")) return "I was created by my owner 😎";
- if(q.includes("motivate")) return "You are stronger than your excuses.";
- return "Processing... मैं सीख रहा हूँ।";
-}
-
-// HINDI VOICE
-function speak(text){
- let u=new SpeechSynthesisUtterance(text);
- u.lang="hi-IN";
- speechSynthesis.speak(u);
-}
-
-// VOICE INPUT
-function voice(){
- const r=new webkitSpeechRecognition();
- r.lang="hi-IN";
- r.onresult=e=>{
-  document.getElementById("msg").value=e.results[0][0].transcript;
-  send();
- }
- r.start();
-}
-
-// IMAGE
-function imageGen(){
- let p=prompt("Describe image");
- if(!p)return;
- let img=document.createElement("img");
- img.src="https://source.unsplash.com/600x400/?"+p;
- document.getElementById("chat").appendChild(img);
-}
-</script>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Login - Jarvis</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="login-box">
-  <h2>Login to Jarvis</h2>
-  <input type="text" id="username" placeholder="Enter name">
-  <button onclick
-    ="login()">Login</button>
-</div>
-
-<script>
-function login(){
-  const allowed = ["Daddy", "Mom", "Brother"];
-  const name = document.getElementById("username").value;
-  if(allowed.includes(name)){
-    localStorage.setItem("user", name);
-    window.location.href = "index.html";
-  } else {
-    alert("Access Denied");
-  }
-}
-</script>
-</body>
-</html>
-body {
-  background-color: #0b0c1a;
-  color: #00ffff;
-  font-family: 'Orbitron', sans-serif;
-  text-align: center;
-}
-
-input, button {
-  background: #111;
-  color: #00ffff;
-  border: 1px solid #00ffff;
-  padding: 10px;
-  margin: 5px;
-}
-
-button:hover {
-  background: #00ffff;
-  color: #0b0c1a;
-  cursor: pointer;
-}
-// Send user query and get AI response
 async function sendMessage(){
-  let input = document.getElementById("msg").value;
-  if(!input) return;
-  addChat("You: " + input);
+  let msg = document.getElementById("msg").value;
+  if(!msg) return;
 
-  // Free AI endpoint (or your OpenAI API)
-  let res = await fetch("https://api.openai.com/v1/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer YOUR_API_KEY"
-    },
-    body: JSON.stringify({
-      model: "text-davinci-003",
-      prompt: input,
-      max_tokens: 300
-    })
-  });
+  addChat("You: " + msg);
 
-  let data = await res.json();
-  let reply = data.choices[0].text;
-  addChat("Jarvis: " + reply);
-  speak(reply);
+  const API_KEY = "PASTE_YOUR_GEMINI_KEY";
+
+  try {
+    let res = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + API_KEY,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: msg }] }]
+        })
+      }
+    );
+
+    let data = await res.json();
+    let reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "No reply";
+
+    addChat("Jarvis: " + reply);
+    speak(reply);
+
+  } catch(err){
+    addChat("Jarvis: Error connecting AI");
+  }
+
   document.getElementById("msg").value = "";
 }
 
@@ -206,46 +38,9 @@ function addChat(text){
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Voice in Hindi & English
 function speak(text){
   let utter = new SpeechSynthesisUtterance(text);
-  utter.lang = "hi-IN";  // Change to "en-US" for English
+  utter.lang = "hi-IN";
   speechSynthesis.speak(utter);
 }
-
-// Mic input
-function voiceInput(){
-  const recognition = new webkitSpeechRecognition();
-  recognition.lang = "hi-IN";
-  recognition.onresult = e => {
-    document.getElementById("msg").value = e.results[0][0].transcript;
-    sendMessage();
-  };
-  recognition.start();
-}
-const API_KEY = "PASTE_YOUR_KEY_HERE";
-
-async function askJarvis(message) {
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer " + API_KEY,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model: "deepseek/deepseek-chat:free",
-      messages: [
-        { role: "system", content: "You are Jarvis, a smart AI that explains clearly for students." },
-        { role: "user", content: message }
-      ]
-    })
-  });
-
-  const data = await response.json();
-  return data.choices[0].message.content;
-}
-document.getElementById("sendBtn").onclick = async () => {
-  const input = document.getElementById("userInput").value;
-  const reply = await askJarvis(input);
-  document.getElementById("chatBox").innerText = reply;
-};
+</script>
